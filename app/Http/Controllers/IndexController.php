@@ -9,7 +9,6 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Support\Facades\DB;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -43,11 +42,11 @@ class IndexController extends BaseController
                 $rnd_ss = rand(0, 6);
 
                 $Users = new UsersDB();
-                $Users->setAttribute('firstname', $firstnames[$rnd_f]);
-                $Users->setAttribute('secondname', $secondnames[$rnd_s]);
-                $Users->setAttribute('surname', $surnames[$rnd_ss]);
+                $Users->setFirstname($firstnames[$rnd_f]);
+                $Users->setSecondname($secondnames[$rnd_s]);
+                $Users->setSurname($surnames[$rnd_ss]);
                 $Users->save();
-                $ID = $Users->getAttribute("id");// getIncrementing();
+                $ID = $Users->getId();
             }
         }
 

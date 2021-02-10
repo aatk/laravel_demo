@@ -28,8 +28,10 @@ DB_PASSWORD=root
 
 ### Создаем таблицы в БД
 В корне проекта выполняем:
-php artisan migrate
+- php artisan migrate
 
+Создаем полнотекстовый индекс:
+- CREATE FULLTEXT INDEX fulltextindex ON `users` (`firstname`, `secondname`, `surname`)
 
 # Сервисы:
 

@@ -1,9 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\IndexController;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -16,30 +15,16 @@ use App\Http\Controllers;
 */
 
 
-Route::get('/install', function (Request $request) {
-    return "install";
-});
+Route::get('/install', [ IndexController::class, 'install' ]);
 
-Route::get('/get/{id}', function ($id, Request $request) {
-    return $id;
-});
+Route::get('/get/{id}', [ IndexController::class, 'getid' ]);
 
-Route::get('/list/{id}/{limit}', function ($id, $limit, Request $request) {
-    return $id." - ".$limit;
-});
+Route::get('/list/{id}/{limit}', [ IndexController::class, 'list' ]);
 
-Route::get('/search/{find}/{id}/{limit}', function ($find, $id, $limit, Request $request) {
-    return $find." - ".$id." - ".$limit;
-});
+Route::get('/search/{find}/{id}/{limit}', [ IndexController::class, 'search' ]);
 
-Route::post('/post', function (Request $request) {
-    return "post";
-});
+Route::post('/post', [ IndexController::class, 'post' ]);
 
-Route::put('/put', function (Request $request) {
-    return "put";
-});
+Route::put('/put', [ IndexController::class, 'put' ]);
 
-Route::delete('/delete', function (Request $request) {
-    return "delete";
-});
+Route::delete('/delete', [ IndexController::class, 'delete' ]);

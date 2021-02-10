@@ -13,12 +13,12 @@ class CreateUsersDBSTable extends Migration
      */
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('users_d_b_s', function (Blueprint $table) {
             $table->id()->autoIncrement();
             $table->string('firstname', 70);
             $table->string('secondname', 70);
             $table->string('surname', 70);
-
+            $table->timestamps();
             //$table->indexCommand(['firstname', 'secondname', 'surname'], "fulltextindex" );
         });
     }
@@ -30,6 +30,6 @@ class CreateUsersDBSTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('users_d_b_s');
     }
 }

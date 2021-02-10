@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
-//use App\Entity\Users;
-//use App\Repository\UsersRepository;
+use App\Models\UsersDB;
+use Database\Factories\UsersDBFactory;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\DB;
+
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -21,45 +23,37 @@ class IndexController extends BaseController
     {
         //@Get("/api/install")
 
-
-//        $entityManager = $this->getDoctrine()->getManager();
-
         $maxcount    = 1000;
         $firstnames  = [ "Александр", "Иван", "Максим", "Олег", "Марат", "Людмила", "Оксана" ];
         $secondnames = [ "Ткаченко", "Жуков", "Чкалов", "Путин", "Шамузинов", "Дахно", "Карась" ];
         $surnames    = [ "Александрович", "Иванович", "Максимович", "Олегович", "Маратович", "Евгеньевич", "Джонович" ];
 
 
-//        $usersRepository = new UsersRepository($this->getDoctrine());
-//        $count           = $usersRepository->count([]);
-//
-//        $ID = false;
-//        if ($count < $maxcount)
-//        {
-//            for ($next_item = $count; $next_item < $maxcount; $next_item++)
-//            {
-//                //заполним таблицу
-//                $rnd_f  = rand(0, 6);
-//                $rnd_s  = rand(0, 6);
-//                $rnd_ss = rand(0, 6);
-//
-//                $Users = new Users();
-//                $Users->setFirstname($firstnames[$rnd_f]);
-//                $Users->setSecondname($secondnames[$rnd_s]);
-//                $Users->setSurname($surnames[$rnd_ss]);
-//
-//                $entityManager->persist($Users);
-//                $entityManager->flush();
-//                $ID = $Users->getId();
-//            }
-//        }
-//
-//        $res = [ 'result' => $ID ];
-//
+        $UsersDBFactory = new UsersDBFactory();
+        $count = $UsersDBFactory->countItems();
 
-        $result = (new Response())->setContent("ok");
+        $ID = false;
+        if ($count < $maxcount)
+        {
+            for ($next_item = $count; $next_item < $maxcount; $next_item++)
+            {
+                //заполним таблицу
+                $rnd_f  = rand(0, 6);
+                $rnd_s  = rand(0, 6);
+                $rnd_ss = rand(0, 6);
 
-        return $result;
+                $Users = new UsersDB();
+                $Users->setAttribute('firstname', $firstnames[$rnd_f]);
+                $Users->setAttribute('secondname', $secondnames[$rnd_s]);
+                $Users->setAttribute('surname', $surnames[$rnd_ss]);
+                $Users->save();
+                $ID = $Users->getAttribute("id");// getIncrementing();
+            }
+        }
+
+        $res = [ 'result' => $ID ];
+
+        return response()->json($res);
     }
 
 
@@ -68,20 +62,17 @@ class IndexController extends BaseController
     {
         //@Get("/api/get/{id}")
         $result = new Response();
-        $result->setContent($id);
-//        $id     = $id ?? 0;
-//        if ($id > 0)
-//        {
-//            $usersRepository = new UsersRepository($this->getDoctrine());
-//            $UserArray       = [];
-//            $UserArray[]     = $usersRepository->find($id)->toArray();
-//
-//            $result = $this->json($UserArray);
-//        }
-//        else
-//        {
-//            $result->setStatusCode(404);
-//        }
+        $result->setStatusCode(404);
+
+        $id     = $id ?? 0;
+        if ($id > 0)
+        {
+            $usersRepository = new UsersDBFactory();
+            $UserArray       = [];
+            $UserArray[]     = $usersRepository->find($id);//->toArray();
+
+            $result = response()->json($UserArray);
+        }
 
         return $result;
     }
@@ -92,19 +83,17 @@ class IndexController extends BaseController
     {
         // @Get("/api/list/{id}/{limit}")
         $result = new Response();
+        $result->setStatusCode(404);
+
         $result->setContent($id." - ".$limit);
-//        $id     = $id ?? 0;
-//        $limit  = $limit ?? 1;
-//        if ($id > 0)
-//        {
-//            $usersRepository = new UsersRepository($this->getDoctrine());
-//            $Users           = $usersRepository->findById($id, $limit);
-//            $result          = $this->json($Users);
-//        }
-//        else
-//        {
-//            $result->setStatusCode(404);
-//        }
+        $id     = $id ?? 0;
+        $limit  = $limit ?? 1;
+        if ($id > 0)
+        {
+            $usersRepository = new UsersDBFactory();
+            $Users           = $usersRepository->findById($id, $limit);
+            $result          = response()->json($Users);
+        }
 
         return $result;
     }
@@ -114,10 +103,10 @@ class IndexController extends BaseController
     {
         //@Get("/api/search/{find}/{id}/{limit}")
         $result = new Response();
-        $result->setContent($find." - ".$id." - ".$limit);
-//        $usersRepository = new UsersRepository($this->getDoctrine());
-//        $findresult      = $usersRepository->findByText($find, $id, $limit);
-//        $result          = $this->json($findresult);
+
+        $usersRepository = new UsersDBFactory();
+        $findresult      = $usersRepository->findByText($find, $id, $limit);
+        $result          = response()->json($findresult);
 
         return $result;
     }
@@ -127,23 +116,24 @@ class IndexController extends BaseController
         $result = false;
         if (isset($json["firstname"]) && isset($json["secondname"]) && isset($json["surname"]))
         {
-            $entityManager = $this->getDoctrine()->getManager();
-            if (isset($json["id"]))
-            {
-                $usersRepository = new UsersRepository($this->getDoctrine());
-                $User            = $usersRepository->find((int)$json["id"]);
-            }
-            else
-            {
-                $User = new Users();
-            }
+            $UserId = false;
+
+            $User = new UsersDB();
             $User->setFirstname($json["firstname"]);
             $User->setSecondname($json["secondname"]);
             $User->setSurname($json["surname"]);
-
-            $entityManager->persist($User);
-            $entityManager->flush();
-            $UserId = $User->getId();
+            if (isset($json["id"]))
+            {
+                $User->setId($json["id"]);
+                if ($User->update())
+                {
+                    $UserId = $User->getId();
+                }
+            }
+            else {
+                $User->save();
+                $UserId = $User->getId();
+            }
 
             if ($UserId)
             {
@@ -159,24 +149,21 @@ class IndexController extends BaseController
     {
         //@Post("/api/post")
         $result = new Response();
-        $result->setContent("post");
-//        $content    = (new Request())->getContent();
-//        $json_items = json_decode($content, true);
-//        foreach ($json_items as $json)
-//        {
-//            unset($json["id"]);
-//            $UserInfo = $this->saveUsers($json);
-//            if ($UserInfo)
-//            {
-//                $UserInfoArray   = [];
-//                $UserInfoArray[] = json_decode($this->json($UserInfo)->getContent(), true);
-//                $result          = $this->json($UserInfoArray)->setStatusCode(201);
-//            }
-//            else
-//            {
-//                $result->setStatusCode(404);
-//            }
-//        }
+        $result->setStatusCode(404);
+
+        $content    = (new Request())->getContent();
+        $json_items = json_decode($content, true);
+        foreach ($json_items as $json)
+        {
+            unset($json["id"]);
+            $UserInfo = $this->saveUsers($json);
+            if ($UserInfo)
+            {
+                $UserInfoArray   = [];
+                $UserInfoArray[] = json_decode(response()->json($UserInfo)->getContent(), true);
+                $result          = response()->json($UserInfoArray)->setStatusCode(201);
+            }
+        }
 
         return $result;
     }
@@ -186,25 +173,22 @@ class IndexController extends BaseController
     {
         //@Put("/api/put")
         $result = new Response();
-        $result->setContent("put");
-//        $content    = (new Request())->getContent();
-//        $json_items = json_decode($content, true);
-//        foreach ($json_items as $json)
-//        {
-//            $id = $json["id"] ?? 0;
-//            if ($id > 0)
-//            {
-//                $UserInfo = $this->saveUsers($json);
-//                if ($UserInfo)
-//                {
-//                    $result->setStatusCode(201);
-//                }
-//                else
-//                {
-//                    $result->setStatusCode(404);
-//                }
-//            }
-//        }
+        $result->setStatusCode(404);
+
+        $content    = (new Request())->getContent();
+        $json_items = json_decode($content, true);
+        foreach ($json_items as $json)
+        {
+            $id = $json["id"] ?? 0;
+            if ($id > 0)
+            {
+                $UserInfo = $this->saveUsers($json);
+                if ($UserInfo)
+                {
+                    $result->setStatusCode(201);
+                }
+            }
+        }
 
         return $result;
     }
@@ -214,29 +198,24 @@ class IndexController extends BaseController
     {
         //@Delete("/api/delete")
         $result = new Response();
-        $result->setContent("delete");
-//        $content    = (new Request())->getContent();
-//        $json_items = json_decode($content, true);
-//        foreach ($json_items as $json)
-//        {
-//            $id = $json["id"] ?? 0;
-//            if ($id > 0)
-//            {
-//                $entityManager = new UsersRepository($this->getDoctrine());
-//                $User          = $entityManager->find($id);
-//
-//                $entityManager = $this->getDoctrine()->getManager();
-//                $entityManager->persist($User);
-//                $entityManager->remove($User);
-//                $entityManager->flush();
-//
-//                $result->setStatusCode(201);
-//            }
-//            else
-//            {
-//                $result->setStatusCode(404);
-//            }
-//        }
+        $result->setStatusCode(404);
+
+        $content    = (new Request())->getContent();
+        $json_items = json_decode($content, true);
+        foreach ($json_items as $json)
+        {
+
+            $id = $json["id"] ?? 0;
+            if ($id > 0)
+            {
+                $User = new UsersDB();
+                $User->setId($id);
+                if ($User->delete())
+                {
+                    $result->setStatusCode(201);
+                }
+            }
+        }
 
         return $result;
     }
